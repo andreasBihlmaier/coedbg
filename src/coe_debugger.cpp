@@ -43,8 +43,10 @@ void CoeDebugger::read_pcap(const std::string &pcap_path) {
   struct ws_dissection packet;
   while (ws_dissect_next(dissector, &packet, NULL, NULL)) {
     add_packet(CoePacket::create_from_dissection(&packet));
-    std::cout << "packet: " << m_packets.back().to_string() << "\n";
+    // std::cout << "packet: " << m_packets.back().to_string() << "\n";
   }
+
+  printf("Read %ld packets\n", m_packets.size());
 }
 
 }  // namespace coe

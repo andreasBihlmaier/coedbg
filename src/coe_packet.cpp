@@ -7,10 +7,13 @@
 namespace coe {
 
 void CoePacket::add_field(const CoeField &field) {
-  if (m_fields.find(field.get_name()) != m_fields.end()) {
-    throw std::runtime_error("Field " + field.get_name() + " contained multiple times in same packet");
+  std::string field_name = field.get_name();
+  int field_name_count = 0;
+  while (m_fields.find(field_name) != m_fields.end()) {
+    field_name_count++;
+    field_name = field.get_name() + "." + std::to_string(field_name_count);
   }
-  m_fields[field.get_name()] = field;
+  m_fields[field_name] = field;
 }
 
 std::string CoePacket::to_string() const {
@@ -43,11 +46,7 @@ static void foreach_add_fields_to_packet(proto_node *node, gpointer data) {
     return;
   }
   std::string abbrev{headerfieldinfo->abbrev};
-  if (abbrev != "text" && abbrev != "eth.addr" && abbrev != "eth.addr_resolved" && abbrev != "eth.lg" &&
-      abbrev != "eth.ig") {  // These fields exist on multiple levels, thus breaking flattend structure.
-                             // Ignore them as they are not needed.
-    packet->add_field(CoeField::create_from_fieldinfo(fieldinfo));
-  }
+  packet->add_field(CoeField::create_from_fieldinfo(fieldinfo));
 
   if (node->first_child != NULL) {
     proto_tree_children_foreach(node, foreach_add_fields_to_packet, packet);
