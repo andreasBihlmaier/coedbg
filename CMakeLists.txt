@@ -21,6 +21,12 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror")
 
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build." FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif (NOT CMAKE_BUILD_TYPE)
+
+
 include_directories(
   include
   ${Wireshark_INCLUDE_DIR}

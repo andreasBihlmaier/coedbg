@@ -7,9 +7,10 @@
 int main(int argc, char** argv) {
   namespace po = boost::program_options;
   po::options_description desc("Allowed options");
-  desc.add_options()                 //
-      ("help", "This help message")  //
-      ("from-pcap", po::value<std::string>(), "PCAP file to read");
+  desc.add_options()                                                //
+      ("help", "This help message")                                 //
+      ("from-pcap", po::value<std::string>(), "PCAP file to read")  //
+      ("plugin-dir", po::value<std::string>(), "Wireshark plugin directory");
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
   po::notify(vm);
@@ -20,6 +21,10 @@ int main(int argc, char** argv) {
   }
 
   coe::CoeDebugger debugger;
+
+  if (vm.count("plugin-dir")) {
+    debugger.set_plugin_dir(vm["plugin-dir"].as<std::string>());
+  }
 
   if (vm.count("from-pcap")) {
     debugger.read_pcap(vm["from-pcap"].as<std::string>());
