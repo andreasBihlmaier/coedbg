@@ -128,7 +128,7 @@ void CoeField::set_value(const fvalue_t &value, enum ftenum type) {
       m_value = value.value.time;
       break;
     default:
-      printf("field type %s (0x%02x) not supported\n", ftype_name(m_type), type);
+      // TODO something like log*_once: printf("field type %s (0x%02x) not supported\n", ftype_name(m_type), type);
       break;
   }
 }

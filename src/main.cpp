@@ -28,6 +28,11 @@ int main(int argc, char** argv) {
 
   if (vm.count("from-pcap")) {
     debugger.read_pcap(vm["from-pcap"].as<std::string>());
+    auto coe_packets = debugger.get_packets_containing_field("ecat_mailbox.coe");
+    printf("Found %zd CoE packets\n", coe_packets.size());
+    for (auto& packet : coe_packets) {
+      std::cout << packet->to_string() << "\n";
+    }
   } else {
     std::cout << "Nothing to do (see --help).\n";
     return 1;

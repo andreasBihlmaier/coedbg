@@ -16,10 +16,19 @@ void CoePacket::add_field(const CoeField &field) {
   m_fields[field_name] = field;
 }
 
+uint32_t CoePacket::get_number() const {
+  return m_number;
+}
+
+void CoePacket::set_number(uint32_t number) {
+  m_number = number;
+}
+
 std::string CoePacket::to_string() const {
   std::string str;
 
-  for (auto entry : m_fields) {
+  str = "packet#" + std::to_string(m_number) + ": ";
+  for (auto &entry : m_fields) {
     str += "(" + entry.second.to_string() + ")";
   }
 
@@ -67,6 +76,10 @@ CoePacket CoePacket::create_from_dissection(ws_dissection *dissection) {
   proto_tree_children_foreach(tree, foreach_add_fields_to_packet, &packet);
 
   return packet;
+}
+
+bool CoePacket::contains_field(const std::string &field_name) const {
+  return m_fields.find(field_name) != m_fields.end();
 }
 
 }  // namespace coe

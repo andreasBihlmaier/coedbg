@@ -41,12 +41,24 @@ void CoeDebugger::read_pcap(const std::string &pcap_path) {
   }
 
   struct ws_dissection packet;
+  uint32_t packet_number = 1;
   while (ws_dissect_next(dissector, &packet, NULL, NULL)) {
     add_packet(CoePacket::create_from_dissection(&packet));
-    // std::cout << "packet: " << m_packets.back().to_string() << "\n";
+    m_packets.back().set_number(packet_number);
+    packet_number++;
   }
 
   printf("Read %ld packets\n", m_packets.size());
+}
+
+std::vector<const CoePacket *> CoeDebugger::get_packets_containing_field(const std::string &field_name) const {
+  std::vector<const CoePacket *> matching_packets;
+  for (auto &packet : m_packets) {
+    if (packet.contains_field(field_name)) {
+      matching_packets.push_back(&packet);
+    }
+  }
+  return matching_packets;
 }
 
 }  // namespace coe

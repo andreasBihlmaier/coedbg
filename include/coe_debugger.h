@@ -16,6 +16,7 @@ class CoeDebugger {
   void add_packet(const CoePacket& packet);
   void read_pcap(const std::string& pcap_path);
   void set_plugin_dir(const std::string& plugin_dir);
+  std::vector<const CoePacket*> get_packets_containing_field(const std::string& field_name) const;
 };
 
 }  // namespace coe
