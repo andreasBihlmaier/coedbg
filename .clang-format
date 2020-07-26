@@ -1,0 +1,7 @@
+Language: Cpp
+BasedOnStyle: Google
+ColumnLimit: 120
+UseTab: Never
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
