@@ -38,7 +38,7 @@ class ValueToStringVisitor : public boost::static_visitor<> {
     m_str = (boost::format("%s=%d") % (operand == true ? "true" : "false") % operand).str();
   }
   void operator()(const uint8_t &operand) const {
-    m_str = (boost::format("0x%02x=%u") % operand % operand).str();
+    m_str = (boost::format("0x%02x=%u") % (unsigned int)operand % (unsigned int)operand).str();
   }
   void operator()(const uint16_t &operand) const {
     m_str = (boost::format("0x%04x=%u") % operand % operand).str();

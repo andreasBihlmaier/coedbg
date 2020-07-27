@@ -61,4 +61,9 @@ std::vector<const CoePacket *> CoeDebugger::get_packets_containing_field(const s
   return matching_packets;
 }
 
+void CoeDebugger::read_esi(const std::string &esi_path) {
+  m_esi_parser.reset(new EsiParser{});
+  m_esi_parser->read_file(esi_path);
+}
+
 }  // namespace coe
