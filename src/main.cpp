@@ -35,7 +35,13 @@ int main(int argc, char** argv) {
     debugger.read_pcap(vm["from-pcap"].as<std::string>());
     auto coe_packets = debugger.get_packets_containing_field("ecat_mailbox.coe");
     printf("Found %zd CoE packets\n", coe_packets.size());
+    // TODO decode PDO mappings contained in OD
     for (auto& packet : coe_packets) {
+      // TODO decode and print each PDO packet
+      // TODO print each SDO transfer
+      // TODO warn about SDO failures/aborts
+      // TODO update OD for each SDO and PDO transfer
+      // TODO update PDO mapping on SDO writes to respective objects
       std::cout << packet->to_string() << "\n";
     }
   } else {
