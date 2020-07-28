@@ -49,7 +49,9 @@ add_library(coe_dbg SHARED
   src/coe_field.cpp
   src/coe_packet.cpp
   src/esi_parser.cpp
+  src/od_base_type.cpp
   src/od.cpp
+  src/od_data_type.cpp
   src/od_entry.cpp
 )
 target_link_libraries(coe_dbg
