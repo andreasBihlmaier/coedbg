@@ -67,13 +67,61 @@ std::string OdEntry::to_string() const {
   }
   str += " type=" + od_base_type_name(type);
   str += " bit_size=" + std::to_string(bit_size);
-  if (!default_data.empty()) {
-    str += " default_data=" + default_data;
+  if (!default_data_string.empty()) {
+    str += " default_data_string=" + default_data_string;
   }
   str += " value=" + od_entry_value_string(value);
   str += ")";
 
   return str;
+}
+
+void OdEntry::set_value_from_default_data() {
+  switch (type) {
+    case OdBaseType::Invalid:
+      throw std::runtime_error("Cannot set default data for value with Invalid type");
+      break;
+    case OdBaseType::Bool:
+      value = static_cast<bool>(std::stoi(default_data_string));
+      break;
+    case OdBaseType::Int8:
+      value = static_cast<int8_t>(std::stoi(default_data_string, 0, 16));
+      break;
+    case OdBaseType::Uint8:
+      value = static_cast<uint8_t>(std::stoul(default_data_string, 0, 16));
+      break;
+    case OdBaseType::Int16:
+      value = static_cast<int16_t>(std::stoi(default_data_string, 0, 16));
+      break;
+    case OdBaseType::Uint16:
+      value = static_cast<uint16_t>(std::stoul(default_data_string, 0, 16));
+      break;
+    case OdBaseType::Int32:
+      value = static_cast<int32_t>(std::stol(default_data_string, 0, 16));
+      break;
+    case OdBaseType::Uint32:
+      value = static_cast<uint32_t>(std::stoul(default_data_string, 0, 16));
+      break;
+    case OdBaseType::Int64:
+      value = static_cast<int64_t>(std::stoll(default_data_string, 0, 16));
+      break;
+    case OdBaseType::Uint64:
+      value = static_cast<uint64_t>(std::stoull(default_data_string));
+      break;
+    case OdBaseType::Float:
+      value = static_cast<float>(std::stof(default_data_string));
+      break;
+    case OdBaseType::Double:
+      value = static_cast<double>(std::stod(default_data_string));
+      break;
+    case OdBaseType::String:
+      value = default_data_string;  // TODO hex to ascii?
+      break;
+    default:
+      throw std::runtime_error("Unkown value of OdBaseType (" +
+                               std::to_string(static_cast<std::underlying_type_t<OdBaseType>>(type)) + ")");
+      break;
+  };
 }
 
 }  // namespace coe

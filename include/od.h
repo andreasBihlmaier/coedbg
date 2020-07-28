@@ -17,6 +17,9 @@ class OD {
  public:
   void add_entry(const OdEntry& entry);
   void add_datatype(const OdDataType& datatype);
+  OdDataType get_type(const std::string& datatype_name) const;
+  OdDataType get_type(const std::string& datatype_name, uint8_t subindex) const;
+  OdDataType get_type(const std::string& datatype_name, const std::string& subindex_type_name) const;
 };
 
 }  // namespace coe

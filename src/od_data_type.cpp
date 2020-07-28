@@ -12,11 +12,8 @@ std::string OdDataType::to_string(bool print_subindex) const {
   str += "name=" + name;
   str += " bit_size=" + std::to_string(bit_size);
   str += " bit_offset=" + std::to_string(bit_offset);
-  if (!type.empty()) {  // only one should be valid
-    str += " type=" + type;
-  } else {
-    str += " base_type=" + od_base_type_name(base_type);
-  }
+  str += " abstract_type=" + abstract_type;
+  str += " base_type=" + od_base_type_name(base_type);
   if (!subindex_types.empty()) {
     str += " subindex_types=(";
     for (auto& subindex_type : subindex_types) {

@@ -45,7 +45,8 @@ std::string od_base_type_name(OdBaseType type) {
       str = "String";
       break;
     default:
-      throw std::runtime_error("Unkown value of OdBaseType");
+      throw std::runtime_error("Unkown value of OdBaseType (" +
+                               std::to_string(static_cast<std::underlying_type_t<OdBaseType>>(type)) + ")");
       break;
   };
   return str;

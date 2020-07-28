@@ -11,7 +11,7 @@ namespace coe {
 class OdDataType {
  public:
   std::string name;
-  std::string type;
+  std::string abstract_type;
   uint8_t subindex;
   uint32_t bit_size;
   uint32_t bit_offset;

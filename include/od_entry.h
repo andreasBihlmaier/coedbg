@@ -19,12 +19,13 @@ class OdEntry {
                                  double, std::string>;
   value_t value;
   OdBaseType type;
-  std::string default_data;
+  std::string default_data_string;
   uint32_t bit_size;
 
   OdEntry() : index(0), subindex(0), type(OdBaseType::Invalid), bit_size(0) {
   }
   std::string to_string() const;
+  void set_value_from_default_data();
 };
 
 }  // namespace coe
