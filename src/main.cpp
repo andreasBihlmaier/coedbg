@@ -25,6 +25,14 @@ int main(int argc, char** argv) {
 
   if (vm.count("esi-file")) {
     debugger.read_esi(vm["esi-file"].as<std::string>());
+    coe::OD* od = debugger.get_od();
+    for (auto object : od->get_objects_in_range(0x1600, 0x17ff)) {  // RxPDOs
+      std::cout << object->to_string() << "\n";
+    }
+    for (auto object : od->get_objects_in_range(0x1a00, 0x1bff)) {  // TxPDOs
+      std::cout << object->to_string() << "\n";
+    }
+    // TODO decode PDO mappings contained in OD
   }
 
   if (vm.count("plugin-dir")) {
@@ -35,7 +43,6 @@ int main(int argc, char** argv) {
     debugger.read_pcap(vm["from-pcap"].as<std::string>());
     auto coe_packets = debugger.get_packets_containing_field("ecat_mailbox.coe");
     printf("Found %zd CoE packets\n", coe_packets.size());
-    // TODO decode PDO mappings contained in OD
     for (auto& packet : coe_packets) {
       // TODO decode and print each PDO packet
       // TODO print each SDO transfer

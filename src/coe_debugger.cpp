@@ -9,6 +9,9 @@
 
 namespace coe {
 
+CoeDebugger::CoeDebugger() : m_od(new OD) {
+}
+
 void CoeDebugger::add_packet(const CoePacket &packet) {
   m_packets.push_back(packet);
 }
@@ -62,8 +65,12 @@ std::vector<const CoePacket *> CoeDebugger::get_packets_containing_field(const s
 }
 
 void CoeDebugger::read_esi(const std::string &esi_path) {
-  m_esi_parser.reset(new EsiParser{});
+  m_esi_parser.reset(new EsiParser{m_od.get()});
   m_esi_parser->read_file(esi_path);
+}
+
+OD *CoeDebugger::get_od() {
+  return m_od.get();
 }
 
 }  // namespace coe

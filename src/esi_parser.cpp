@@ -9,6 +9,9 @@ namespace coe {
 
 namespace pt = boost::property_tree;
 
+EsiParser::EsiParser(OD* od) : m_od(od) {
+}
+
 void EsiParser::read_file(const std::string& esi_path) {
   pt::ptree tree;
 
@@ -36,7 +39,7 @@ void EsiParser::read_file(const std::string& esi_path) {
       OdDataType sub_datatype;
       sub_datatype.name = tree_subdatatype.get<std::string>("Name");
       sub_datatype.abstract_type = tree_subdatatype.get<std::string>("Type");
-      sub_datatype.base_type = m_od.get_type(sub_datatype.abstract_type).base_type;
+      sub_datatype.base_type = m_od->get_type(sub_datatype.abstract_type).base_type;
       sub_datatype.bit_size = tree_subdatatype.get<uint32_t>("BitSize");
       sub_datatype.bit_offset = tree_subdatatype.get<uint32_t>("BitOffs");
       auto optional_subindex = tree_subdatatype.get_optional<uint8_t>("SubIdx");
@@ -48,8 +51,7 @@ void EsiParser::read_file(const std::string& esi_path) {
       datatype.add_subtype(sub_datatype);
       last_subindex = sub_datatype.subindex;
     }
-    m_od.add_datatype(datatype);
-    std::cout << datatype.to_string() << '\n';
+    m_od->add_datatype(datatype);
   }
 
   for (auto& kv : tree.get_child("EtherCATInfo.Descriptions.Devices.Device.Profile.Dictionary.Objects")) {
@@ -65,14 +67,13 @@ void EsiParser::read_file(const std::string& esi_path) {
     entry.type_name = tree_object.get<std::string>("Type");
     if (!tree_object.get_child_optional("Info.SubItem")) {  // OD entry without subindices
       entry.subindex = 0;
-      entry.type = m_od.get_type(entry.type_name).base_type;
+      entry.type = m_od->get_type(entry.type_name).base_type;
       auto tree_default_data = tree_object.get_optional<std::string>("Info.DefaultData");
       if (tree_default_data) {
         entry.default_data_string = *tree_default_data;
         entry.set_value_from_default_data();
       }
-      m_od.add_entry(entry);
-      std::cout << entry.to_string() << '\n';
+      m_od->add_entry(entry);
     } else {
       uint8_t subindex = 0;
       for (auto& sub_kv : tree_object.get_child("Info")) {
@@ -81,7 +82,7 @@ void EsiParser::read_file(const std::string& esi_path) {
         subentry.index = entry.index;
         std::string subentry_name = tree_subobject.get<std::string>("Name");
         subentry.name = entry.name + "/" + subentry_name;
-        OdDataType subentry_datatype = m_od.get_type(entry.type_name, subentry_name);
+        OdDataType subentry_datatype = m_od->get_type(entry.type_name, subentry_name);
         subentry.type = subentry_datatype.base_type;
         subentry.bit_size = subentry_datatype.bit_size;
         if (subentry_datatype.name == "Elements") {
@@ -94,12 +95,12 @@ void EsiParser::read_file(const std::string& esi_path) {
           subentry.default_data_string = *tree_default_data;
           subentry.set_value_from_default_data();
         }
-        m_od.add_entry(subentry);
-        std::cout << subentry.to_string() << '\n';
+        m_od->add_entry(subentry);
         subindex++;
       }
     }
   }
-}  // namespace coe
+  m_od->update_name_cache();
+}
 
 }  // namespace coe
