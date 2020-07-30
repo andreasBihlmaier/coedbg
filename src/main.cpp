@@ -25,14 +25,8 @@ int main(int argc, char** argv) {
 
   if (vm.count("esi-file")) {
     debugger.read_esi(vm["esi-file"].as<std::string>());
-    coe::OD* od = debugger.get_od();
-    for (auto object : od->get_objects_in_range(0x1600, 0x17ff)) {  // RxPDOs
-      std::cout << object->to_string() << "\n";
-    }
-    for (auto object : od->get_objects_in_range(0x1a00, 0x1bff)) {  // TxPDOs
-      std::cout << object->to_string() << "\n";
-    }
-    // TODO decode PDO mappings contained in OD
+    const coe::OD* od = debugger.get_od();
+    std::cout << od->pdo_mappings_to_string() << '\n';
   }
 
   if (vm.count("plugin-dir")) {
@@ -41,15 +35,23 @@ int main(int argc, char** argv) {
 
   if (vm.count("from-pcap")) {
     debugger.read_pcap(vm["from-pcap"].as<std::string>());
-    auto coe_packets = debugger.get_packets_containing_field("ecat_mailbox.coe");
-    printf("Found %zd CoE packets\n", coe_packets.size());
-    for (auto& packet : coe_packets) {
-      // TODO decode and print each PDO packet
-      // TODO print each SDO transfer
-      // TODO warn about SDO failures/aborts
-      // TODO update OD for each SDO and PDO transfer
-      // TODO update PDO mapping on SDO writes to respective objects
-      std::cout << packet->to_string() << "\n";
+    auto& packets = debugger.get_packets();
+    for (auto& packet : packets) {
+      const uint8_t LogicalReadWrite = 12;  // TODO enum
+      if (packet.contains_field("ecat_mailbox.coe")) {
+        std::cout << "CoE: " << packet.to_string() << "\n";
+        // TODO print each SDO transfer
+        // TODO warn about SDO failures/aborts
+        // TODO update OD for each SDO transfer
+        // TODO update PDO mapping on SDO writes to respective objects
+      } else if (packet.contains_field("ecat.lad") &&
+                 packet.get_field("ecat.cmd")->get_value<uint8_t>() == LogicalReadWrite) {
+        std::cout << "PDO: " << packet.to_string() << "\n";
+        auto& pdo_data = packet.get_field("ecat.data")->get_value<std::vector<uint8_t>>();
+        std::cout << "pdo_data.size()=" << pdo_data.size() << "\n";
+        // TODO decode and print each PDO packet
+        // TODO update OD for each PDO
+      }
     }
   } else {
     std::cout << "Nothing to do (see --help).\n";

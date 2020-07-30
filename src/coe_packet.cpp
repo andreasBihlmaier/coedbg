@@ -16,6 +16,15 @@ void CoePacket::add_field(const CoeField &field) {
   m_fields[field_name] = field;
 }
 
+const CoeField *CoePacket::get_field(const std::string &field_name) const {
+  const CoeField *field = nullptr;
+  auto field_kv = m_fields.find(field_name);
+  if (field_kv != m_fields.end()) {
+    field = &field_kv->second;
+  }
+  return field;
+}
+
 uint32_t CoePacket::get_number() const {
   return m_number;
 }

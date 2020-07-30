@@ -54,6 +54,10 @@ void CoeDebugger::read_pcap(const std::string &pcap_path) {
   printf("Read %ld packets\n", m_packets.size());
 }
 
+const std::vector<CoePacket> &CoeDebugger::get_packets() const {
+  return m_packets;
+}
+
 std::vector<const CoePacket *> CoeDebugger::get_packets_containing_field(const std::string &field_name) const {
   std::vector<const CoePacket *> matching_packets;
   for (auto &packet : m_packets) {
@@ -69,7 +73,7 @@ void CoeDebugger::read_esi(const std::string &esi_path) {
   m_esi_parser->read_file(esi_path);
 }
 
-OD *CoeDebugger::get_od() {
+const OD *CoeDebugger::get_od() const {
   return m_od.get();
 }
 

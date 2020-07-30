@@ -70,6 +70,14 @@ class ValueToStringVisitor : public boost::static_visitor<> {
   void operator()(const std::string &operand) const {
     m_str = operand;
   }
+  void operator()(const std::vector<uint8_t> &operand) const {
+    m_str = "(len=" + std::to_string(operand.size());
+    m_str += " data=0x";
+    for (auto byte : operand) {
+      m_str += (boost::format("%02x") % (unsigned int)byte).str();
+    }
+    m_str += ")";
+  }
   void operator()(const nstime_t &operand) const {
     m_str = (boost::format("%d.%09d") % operand.secs % operand.nsecs).str();
   }
@@ -123,6 +131,10 @@ void CoeField::set_value(const fvalue_t &value, enum ftenum type) {
     case FT_STRING:
       m_value = std::string(value.value.string);
       break;
+    case FT_BYTES:
+      m_value = std::vector<uint8_t>(static_cast<uint8_t *>(value.value.bytes->data),
+                                     static_cast<uint8_t *>(value.value.bytes->data + value.value.bytes->len));
+      break;
     case FT_ABSOLUTE_TIME:  // fallthrough
     case FT_RELATIVE_TIME:
       m_value = value.value.time;
@@ -145,6 +157,25 @@ CoeField CoeField::create_from_fieldinfo(field_info *fieldinfo) {
   field.set_value(fieldinfo->value, headerfieldinfo->type);
 
   return field;
+}
+
+template <>
+const uint8_t &CoeField::get_value<uint8_t>() const {
+  if (m_type != FT_UINT8) {
+    throw std::runtime_error("Field " + m_name + " value requested as uint8_t (FT_UINT8), but actual type is " +
+                             ftype_name(m_type));
+  }
+  return boost::get<uint8_t>(m_value);
+}
+
+template <>
+const std::vector<uint8_t> &CoeField::get_value<std::vector<uint8_t>>() const {
+  if (m_type != FT_BYTES) {
+    throw std::runtime_error("Field " + m_name +
+                             " value requested as std::vector<uint8_t> (FT_BYTES), but actual type is " +
+                             ftype_name(m_type));
+  }
+  return boost::get<std::vector<uint8_t>>(m_value);
 }
 
 }  // namespace coe

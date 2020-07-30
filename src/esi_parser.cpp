@@ -12,6 +12,21 @@ namespace pt = boost::property_tree;
 EsiParser::EsiParser(OD* od) : m_od(od) {
 }
 
+boost::optional<std::string> get_default_data(const pt::ptree& tree) {
+  auto tree_default_data = tree.get_optional<std::string>("Info.DefaultData");
+  auto tree_default_value = tree.get_optional<std::string>("Info.DefaultValue");
+  if (tree_default_data && tree_default_value) {
+    throw std::runtime_error("Item contains both Info.DefaultData and Info.DefaultValue");
+  }
+  if (tree_default_value) {
+    tree_default_data = tree_default_value;
+  }
+  if (tree_default_data && tree_default_data->rfind("#x", 0) == 0) {
+    (*tree_default_data)[0] = '0';
+  }
+  return tree_default_data;
+}  // namespace coe
+
 void EsiParser::read_file(const std::string& esi_path) {
   pt::ptree tree;
 
@@ -68,7 +83,7 @@ void EsiParser::read_file(const std::string& esi_path) {
     if (!tree_object.get_child_optional("Info.SubItem")) {  // OD entry without subindices
       entry.subindex = 0;
       entry.type = m_od->get_type(entry.type_name).base_type;
-      auto tree_default_data = tree_object.get_optional<std::string>("Info.DefaultData");
+      auto tree_default_data = get_default_data(tree_object);
       if (tree_default_data) {
         entry.default_data_string = *tree_default_data;
         entry.set_value_from_default_data();
@@ -90,7 +105,7 @@ void EsiParser::read_file(const std::string& esi_path) {
         } else {
           subentry.subindex = subentry_datatype.subindex;
         }
-        auto tree_default_data = tree_subobject.get_optional<std::string>("Info.DefaultData");
+        auto tree_default_data = get_default_data(tree_subobject);
         if (tree_default_data) {
           subentry.default_data_string = *tree_default_data;
           subentry.set_value_from_default_data();
@@ -101,6 +116,7 @@ void EsiParser::read_file(const std::string& esi_path) {
     }
   }
   m_od->update_name_cache();
+  m_od->update_pdo_mapping_cache();
 }
 
 }  // namespace coe

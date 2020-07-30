@@ -73,6 +73,10 @@ OdBaseType od_base_type_from_string(const std::string& base_type_name) {
     base_type = OdBaseType::Uint64;
   } else if (base_type_name == "LINT") {
     base_type = OdBaseType::Int64;
+  } else if (base_type_name == "REAL") {
+    base_type = OdBaseType::Float;
+  } else if (base_type_name == "LREAL") {
+    base_type = OdBaseType::Double;
   } else if (base_type_name.rfind("STRING", 0) == 0) {
     base_type = OdBaseType::String;
   } else if (base_type_name.rfind("BIT", 0) == 0) {

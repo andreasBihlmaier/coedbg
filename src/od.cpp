@@ -6,6 +6,49 @@
 
 namespace coe {
 
+PdoMapping OD::pdo_mappings(uint16_t start_index, uint16_t end_index) {
+  uint16_t byte_offset = 0;
+  PdoMapping mapping;
+  for (auto object : get_objects_in_range(start_index, end_index)) {
+    for (auto entry_kv : *object) {
+      if (entry_kv.first == 0) {  // skip array index
+        continue;
+      }
+      auto decoded_mapping = decode_pdo_mapping(entry_kv.second);
+      mapping[byte_offset] = get_entry(decoded_mapping.index, decoded_mapping.subindex);
+      if (mapping[byte_offset] == nullptr) {
+        mapping[byte_offset] = new OdEntry();  // TODO memory leak
+        mapping[byte_offset]->index = decoded_mapping.index;
+        mapping[byte_offset]->subindex = decoded_mapping.subindex;
+        mapping[byte_offset]->name = "UNKNOWN OBJECT referenced by " + entry_kv.second.to_string();
+      }
+      byte_offset += decoded_mapping.byte_size;
+    }
+  }
+  return mapping;
+}
+
+std::string OD::pdo_mapping_to_string(const PdoMapping& mapping) {
+  std::string str;
+  str += "(";
+  for (auto byte_offset_entry_kv : mapping) {
+    str += "(offset=" + std::to_string(byte_offset_entry_kv.first) +
+           " entry=" + byte_offset_entry_kv.second->to_string() + ")";
+  }
+  str += ")";
+  return str;
+}
+
+PdoMappingDecoding OD::decode_pdo_mapping(const OdEntry& entry) {
+  if (entry.type != OdBaseType::Uint32) {
+    throw std::runtime_error("OdEntry " + entry.to_string() + " has wrong type for a PDO mapping");
+  }
+  uint32_t mapping_value = boost::get<uint32_t>(entry.value);
+  return PdoMappingDecoding{static_cast<uint16_t>((mapping_value & (0xFFFF << 16)) >> 16),
+                            static_cast<uint8_t>((mapping_value & (0xFF << 8)) >> 8),
+                            static_cast<uint8_t>(mapping_value & 0xFF)};
+}
+
 void OD::add_entry(const OdEntry& entry) {
   if (m_od.find(entry.index) == m_od.end()) {
     m_od[entry.index] = OdObject{};
@@ -21,13 +64,14 @@ void OD::add_entry(const OdEntry& entry) {
 
 void OD::add_datatype(const OdDataType& datatype) {
   if (datatype.name.empty()) {
-    throw std::runtime_error("Tried to add DataTypes with empty name");
+    throw std::runtime_error("Tried to add DataType with empty name");
   }
   if (datatype.abstract_type.empty() && datatype.base_type == OdBaseType::Invalid && datatype.subindex_types.empty()) {
-    throw std::runtime_error("Tried to add DataTypes with empty type, Invalid base_type and no subindex_types");
+    throw std::runtime_error("Tried to add DataType with empty type, Invalid base_type and no subindex_types: " +
+                             datatype.to_string());
   }
   if (m_datatypes.find(datatype.name) != m_datatypes.end()) {
-    throw std::runtime_error("DataType " + datatype.name + " already contained in DataTypes");
+    throw std::runtime_error("DataType " + datatype.name + " already contained in DataTypes: " + datatype.to_string());
   }
   m_datatypes[datatype.name] = datatype;
 }
@@ -43,6 +87,11 @@ void OD::update_name_cache() {
       m_name_to_entry[entry.name] = &entry;
     }
   }
+}
+
+void OD::update_pdo_mapping_cache() {
+  m_rxpdo_mapping = pdo_mappings(0x1600, 0x17ff);
+  m_txpdo_mapping = pdo_mappings(0x1a00, 0x1bff);
 }
 
 OdDataType OD::get_type(const std::string& datatype_name) const {
@@ -94,6 +143,9 @@ OdObject* OD::get_object(uint16_t index) {
 
 OdEntry* OD::get_entry(uint16_t index, uint8_t subindex) {
   OdObject* object = get_object(index);
+  if (object == nullptr) {
+    return nullptr;
+  }
   auto entry_kv = object->find(subindex);
   if (entry_kv == object->end()) {
     return nullptr;
@@ -121,6 +173,13 @@ std::vector<OdObject*> OD::get_objects_in_range(uint16_t start_index, uint16_t e
     object_iter++;
   }
   return objects;
+}
+
+std::string OD::pdo_mappings_to_string() const {
+  std::string str;
+  str += "(RxPDO=" + pdo_mapping_to_string(m_rxpdo_mapping) + ")";
+  str += "(TxPDO=" + pdo_mapping_to_string(m_txpdo_mapping) + ")";
+  return str;
 }
 
 }  // namespace coe

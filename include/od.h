@@ -11,16 +11,32 @@
 
 namespace coe {
 
+using PdoMapping = std::map<uint16_t, OdEntry*>;
+
+struct PdoMappingDecoding {
+  uint16_t index;
+  uint8_t subindex;
+  uint8_t byte_size;
+};
+
 class OD {
  private:
   std::map<uint16_t, OdObject> m_od;
   std::map<std::string, OdDataType> m_datatypes;
   std::map<std::string, OdEntry*> m_name_to_entry;
+  PdoMapping m_rxpdo_mapping;
+  PdoMapping m_txpdo_mapping;
+
+  PdoMapping pdo_mappings(uint16_t start_index, uint16_t end_index);
 
  public:
+  static PdoMappingDecoding decode_pdo_mapping(const OdEntry& entry);
+  static std::string pdo_mapping_to_string(const PdoMapping& mapping);
+
   void add_entry(const OdEntry& entry);
   void add_datatype(const OdDataType& datatype);
   void update_name_cache();
+  void update_pdo_mapping_cache();
   OdDataType get_type(const std::string& datatype_name) const;
   OdDataType get_type(const std::string& datatype_name, uint8_t subindex) const;
   OdDataType get_type(const std::string& datatype_name, const std::string& subindex_type_name) const;
@@ -28,6 +44,7 @@ class OD {
   OdEntry* get_entry(uint16_t index, uint8_t subindex);
   OdEntry* get_entry(const std::string& name);
   std::vector<OdObject*> get_objects_in_range(uint16_t start_index, uint16_t end_index);
+  std::string pdo_mappings_to_string() const;
 };
 
 }  // namespace coe

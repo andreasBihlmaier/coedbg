@@ -17,6 +17,7 @@ class CoePacket {
 
  public:
   void add_field(const CoeField& field);
+  const CoeField* get_field(const std::string& field_name) const;
   uint32_t get_number() const;
   void set_number(uint32_t number);
   static CoePacket create_from_dissection(struct ws_dissection* dissection);
