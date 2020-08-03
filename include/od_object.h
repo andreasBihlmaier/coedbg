@@ -9,9 +9,6 @@
 namespace coe {
 
 class OdObject {
- private:
-  std::map<uint8_t, OdEntry> m_entries;
-
  public:
   std::string to_string() const;
   OdEntry& operator[](const uint8_t& key) {
@@ -23,9 +20,18 @@ class OdObject {
   std::map<uint8_t, OdEntry>::iterator begin() {
     return m_entries.begin();
   }
+  const std::map<uint8_t, OdEntry>::const_iterator begin() const {
+    return m_entries.begin();
+  }
   std::map<uint8_t, OdEntry>::iterator end() {
     return m_entries.end();
   }
+  const std::map<uint8_t, OdEntry>::const_iterator end() const {
+    return m_entries.end();
+  }
+
+ private:
+  std::map<uint8_t, OdEntry> m_entries;
 };
 
 }  // namespace coe

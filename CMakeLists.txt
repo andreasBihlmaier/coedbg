@@ -54,6 +54,7 @@ add_library(coe_dbg SHARED
   src/od_data_type.cpp
   src/od_entry.cpp
   src/od_object.cpp
+  src/variant_value.cpp
 )
 target_link_libraries(coe_dbg
   liblibwireshark

@@ -1,5 +1,7 @@
 #include "od_entry.h"
 
+#include <iostream>
+
 #include <boost/format.hpp>
 
 namespace coe {
@@ -47,12 +49,27 @@ class OdEntryValueToStringVisitor : public boost::static_visitor<> {
   void operator()(const std::string &operand) const {
     m_str = operand;
   }
+  void operator()(const std::vector<uint8_t> &operand) const {
+    m_str = "(len=" + std::to_string(operand.size());
+    m_str += " data=0x";
+    for (auto byte : operand) {
+      m_str += (boost::format("%02x") % (unsigned int)byte).str();
+    }
+    m_str += ")";
+  }
+  void operator()(const NsTime &operand) const {
+    m_str = (boost::format("%d.%09d") % operand.secs % operand.nsecs).str();
+  }
 };
 
-static std::string od_entry_value_string(const OdEntry::value_t &value) {
+std::string OdEntry::value_to_string(const VariantValue &value) {
   std::string value_str;
   boost::apply_visitor(OdEntryValueToStringVisitor(value_str), value);
   return value_str;
+}
+
+std::string OdEntry::value_to_string() const {
+  return value_to_string(value);
 }
 
 std::string OdEntry::to_string() const {
@@ -70,7 +87,7 @@ std::string OdEntry::to_string() const {
   if (!default_data_string.empty()) {
     str += " default_data_string=" + default_data_string;
   }
-  str += " value=" + od_entry_value_string(value);
+  str += " value=" + value_to_string();
   str += ")";
 
   return str;
@@ -122,6 +139,87 @@ void OdEntry::set_value_from_default_data() {
                                std::to_string(static_cast<std::underlying_type_t<OdBaseType>>(type)) + ")");
       break;
   };
+}
+
+void OdEntry::set_value(const std::vector<uint8_t> &data) {
+  VariantValue new_value;
+  switch (type) {
+    case OdBaseType::Invalid:
+      throw std::runtime_error("Cannot set data for value with Invalid type");
+      break;
+    case OdBaseType::Bool:
+      new_value = static_cast<bool>(data[0]);
+      break;
+    case OdBaseType::Int8:
+      new_value = static_cast<int8_t>(data[0]);
+      break;
+    case OdBaseType::Uint8:
+      new_value = data[0];
+      break;
+    case OdBaseType::Int16: {
+      int16_t v;
+      memcpy(&v, &data[0], sizeof(v));
+      new_value = v;
+      break;
+    }
+    case OdBaseType::Uint16: {
+      uint16_t v;
+      memcpy(&v, &data[0], sizeof(v));
+      new_value = v;
+      break;
+    }
+    case OdBaseType::Int32: {
+      int32_t v;
+      memcpy(&v, &data[0], sizeof(v));
+      new_value = v;
+      break;
+    }
+    case OdBaseType::Uint32: {
+      uint32_t v;
+      memcpy(&v, &data[0], sizeof(v));
+      new_value = v;
+      break;
+    }
+    case OdBaseType::Int64: {
+      int64_t v;
+      memcpy(&v, &data[0], sizeof(v));
+      new_value = v;
+      break;
+    }
+    case OdBaseType::Uint64: {
+      uint64_t v;
+      memcpy(&v, &data[0], sizeof(v));
+      new_value = v;
+      break;
+    }
+    case OdBaseType::Float: {
+      float v;
+      memcpy(&v, &data[0], sizeof(v));
+      new_value = v;
+      break;
+    }
+    case OdBaseType::Double: {
+      double v;
+      memcpy(&v, &data[0], sizeof(v));
+      new_value = v;
+      break;
+    }
+    case OdBaseType::String:
+      new_value = std::string(&data[0], &data[0] + data.size());
+      break;
+    default:
+      throw std::runtime_error("Unkown value of OdBaseType (" +
+                               std::to_string(static_cast<std::underlying_type_t<OdBaseType>>(type)) + ")");
+      break;
+  };
+  set_value(new_value);
+}
+
+void OdEntry::set_value(const VariantValue &new_value) {
+  if (value_change_callback) {
+    value_change_callback(*this, new_value);
+  }
+  value = new_value;
 }
 
 }  // namespace coe

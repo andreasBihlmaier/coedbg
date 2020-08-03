@@ -78,18 +78,22 @@ class ValueToStringVisitor : public boost::static_visitor<> {
     }
     m_str += ")";
   }
-  void operator()(const nstime_t &operand) const {
+  void operator()(const NsTime &operand) const {
     m_str = (boost::format("%d.%09d") % operand.secs % operand.nsecs).str();
   }
 };
+
+std::string CoeField::value_to_string() const {
+  std::string str;
+  boost::apply_visitor(ValueToStringVisitor(str), m_value);
+  return str;
+}
 
 std::string CoeField::to_string() const {
   std::string str;
   str += "name=" + m_name;
   str += " type=" + std::string(ftype_name(m_type));
-  std::string value_str;
-  boost::apply_visitor(ValueToStringVisitor(value_str), m_value);
-  str += " value=" + value_str;
+  str += " value=" + value_to_string();
   return str;
 }
 
@@ -131,13 +135,14 @@ void CoeField::set_value(const fvalue_t &value, enum ftenum type) {
     case FT_STRING:
       m_value = std::string(value.value.string);
       break;
-    case FT_BYTES:
+    case FT_BYTES:  // fallthrough
+    case FT_ETHER:
       m_value = std::vector<uint8_t>(static_cast<uint8_t *>(value.value.bytes->data),
                                      static_cast<uint8_t *>(value.value.bytes->data + value.value.bytes->len));
       break;
     case FT_ABSOLUTE_TIME:  // fallthrough
     case FT_RELATIVE_TIME:
-      m_value = value.value.time;
+      m_value = NsTime{value.value.time.secs, value.value.time.nsecs};
       break;
     default:
       // TODO something like log*_once: printf("field type %s (0x%02x) not supported\n", ftype_name(m_type), type);
@@ -160,6 +165,11 @@ CoeField CoeField::create_from_fieldinfo(field_info *fieldinfo) {
 }
 
 template <>
+const VariantValue &CoeField::get_value<VariantValue>() const {
+  return m_value;
+}
+
+template <>
 const uint8_t &CoeField::get_value<uint8_t>() const {
   if (m_type != FT_UINT8) {
     throw std::runtime_error("Field " + m_name + " value requested as uint8_t (FT_UINT8), but actual type is " +
@@ -169,10 +179,28 @@ const uint8_t &CoeField::get_value<uint8_t>() const {
 }
 
 template <>
+const uint16_t &CoeField::get_value<uint16_t>() const {
+  if (m_type != FT_UINT16) {
+    throw std::runtime_error("Field " + m_name + " value requested as uint16_t (FT_UINT16), but actual type is " +
+                             ftype_name(m_type));
+  }
+  return boost::get<uint16_t>(m_value);
+}
+
+template <>
+const uint32_t &CoeField::get_value<uint32_t>() const {
+  if (m_type != FT_UINT32) {
+    throw std::runtime_error("Field " + m_name + " value requested as uint32_t (FT_UINT32), but actual type is " +
+                             ftype_name(m_type));
+  }
+  return boost::get<uint32_t>(m_value);
+}
+
+template <>
 const std::vector<uint8_t> &CoeField::get_value<std::vector<uint8_t>>() const {
-  if (m_type != FT_BYTES) {
+  if (m_type != FT_BYTES && m_type != FT_ETHER) {
     throw std::runtime_error("Field " + m_name +
-                             " value requested as std::vector<uint8_t> (FT_BYTES), but actual type is " +
+                             " value requested as std::vector<uint8_t> (FT_BYTES or FT_ETHER), but actual type is " +
                              ftype_name(m_type));
   }
   return boost::get<std::vector<uint8_t>>(m_value);

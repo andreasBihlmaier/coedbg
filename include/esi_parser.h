@@ -9,12 +9,12 @@
 namespace coe {
 
 class EsiParser {
- private:
-  OD* m_od;
-
  public:
   EsiParser(OD* od);
   void read_file(const std::string& esi_path);
+
+ private:
+  OD* m_od;
 };
 
 }  // namespace coe

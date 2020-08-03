@@ -9,8 +9,8 @@ namespace coe {
 PdoMapping OD::pdo_mappings(uint16_t start_index, uint16_t end_index) {
   uint16_t byte_offset = 0;
   PdoMapping mapping;
-  for (auto object : get_objects_in_range(start_index, end_index)) {
-    for (auto entry_kv : *object) {
+  for (auto& object : get_objects_in_range(start_index, end_index)) {
+    for (auto& entry_kv : *object) {
       if (entry_kv.first == 0) {  // skip array index
         continue;
       }
@@ -180,6 +180,24 @@ std::string OD::pdo_mappings_to_string() const {
   str += "(RxPDO=" + pdo_mapping_to_string(m_rxpdo_mapping) + ")";
   str += "(TxPDO=" + pdo_mapping_to_string(m_txpdo_mapping) + ")";
   return str;
+}
+
+std::string OD::to_string() const {
+  std::string str;
+  for (const auto& object_kv : m_od) {
+    for (const auto& entry_kv : object_kv.second) {
+      str += entry_kv.second.to_string();
+    }
+  }
+  return str;
+}
+
+void OD::set_value_change_callback(OdEntry::ValueChangeCallback value_change_callback) {
+  for (auto& object_kv : m_od) {
+    for (auto& entry_kv : object_kv.second) {
+      entry_kv.second.value_change_callback = value_change_callback;
+    }
+  }
 }
 
 }  // namespace coe

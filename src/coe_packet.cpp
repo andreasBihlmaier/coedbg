@@ -91,4 +91,36 @@ bool CoePacket::contains_field(const std::string &field_name) const {
   return m_fields.find(field_name) != m_fields.end();
 }
 
+bool CoePacket::was_sent_from_master() const {
+  return get_field("eth.src")->get_value<std::vector<uint8_t>>() == MasterSourceAddress;
+}
+
+bool CoePacket::was_sent_from_slave() const {
+  return get_field("eth.src")->get_value<std::vector<uint8_t>>() == SlaveSourceAddress;
+}
+
+bool CoePacket::is_sdo_type(SdoType sdo_type) const {
+  return static_cast<SdoType>(get_field("ecat_mailbox.coe.type")->get_value<uint16_t>()) == sdo_type;
+}
+
+bool CoePacket::is_client_command_specifier(SdoClientCommandSpecifier sdo_ccs) const {
+  return static_cast<SdoClientCommandSpecifier>(get_field("ecat_mailbox.coe.sdoccsiu")->get_value<uint8_t>() >> 5) ==
+         sdo_ccs;
+}
+
+bool CoePacket::is_server_command_specifier(SdoServerCommandSpecifier sdo_scs) const {
+  return static_cast<SdoServerCommandSpecifier>(get_field("ecat_mailbox.coe.sdoscsiu")->get_value<uint8_t>() >> 5) ==
+         sdo_scs;
+}
+
+bool CoePacket::is_sdo() const {
+  return contains_field("ecat_mailbox.coe");
+}
+
+bool CoePacket::is_pdo() const {
+  return (contains_field("ecat.lad") &&
+          get_field("ecat.cmd")->get_value<uint8_t>() ==
+              static_cast<std::underlying_type_t<EtherCatCommand>>(EtherCatCommand::LogicalReadWrite));
+}
+
 }  // namespace coe

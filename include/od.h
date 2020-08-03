@@ -1,6 +1,7 @@
 #ifndef OD_H_
 #define OD_H_
 
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -20,15 +21,6 @@ struct PdoMappingDecoding {
 };
 
 class OD {
- private:
-  std::map<uint16_t, OdObject> m_od;
-  std::map<std::string, OdDataType> m_datatypes;
-  std::map<std::string, OdEntry*> m_name_to_entry;
-  PdoMapping m_rxpdo_mapping;
-  PdoMapping m_txpdo_mapping;
-
-  PdoMapping pdo_mappings(uint16_t start_index, uint16_t end_index);
-
  public:
   static PdoMappingDecoding decode_pdo_mapping(const OdEntry& entry);
   static std::string pdo_mapping_to_string(const PdoMapping& mapping);
@@ -45,6 +37,17 @@ class OD {
   OdEntry* get_entry(const std::string& name);
   std::vector<OdObject*> get_objects_in_range(uint16_t start_index, uint16_t end_index);
   std::string pdo_mappings_to_string() const;
+  std::string to_string() const;
+  void set_value_change_callback(OdEntry::ValueChangeCallback value_change_callback);
+
+ private:
+  std::map<uint16_t, OdObject> m_od;
+  std::map<std::string, OdDataType> m_datatypes;
+  std::map<std::string, OdEntry*> m_name_to_entry;
+  PdoMapping m_rxpdo_mapping;
+  PdoMapping m_txpdo_mapping;
+
+  PdoMapping pdo_mappings(uint16_t start_index, uint16_t end_index);
 };
 
 }  // namespace coe

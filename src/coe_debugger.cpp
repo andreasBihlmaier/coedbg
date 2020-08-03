@@ -6,6 +6,7 @@
 
 #include <libwireshark/ws_capture.h>
 #include <libwireshark/ws_dissect.h>
+#include <boost/format.hpp>
 
 namespace coe {
 
@@ -73,8 +74,68 @@ void CoeDebugger::read_esi(const std::string &esi_path) {
   m_esi_parser->read_file(esi_path);
 }
 
-const OD *CoeDebugger::get_od() const {
+OD *CoeDebugger::get_od() const {
   return m_od.get();
+}
+
+void CoeDebugger::update_od(const CoePacket &packet, bool missing_od_entries_are_errors) {
+  if (packet.is_sdo()) {
+    uint16_t index = packet.get_field("ecat_mailbox.coe.sdoidx")->get_value<uint16_t>();
+    uint8_t subindex = packet.get_field("ecat_mailbox.coe.sdosub")->get_value<uint8_t>();
+    OdEntry *entry = m_od->get_entry(index, subindex);
+    if (entry == nullptr) {
+      std::string msg =
+          (boost::format("Entry index=0x%04x subindex=%d does not exist in OD") % index % (unsigned int)subindex).str();
+      if (missing_od_entries_are_errors) {
+        throw std::runtime_error(msg);
+      } else {
+        std::cout << "Warning: " << msg << "\n";
+        return;
+      }
+    }
+    VariantValue value;
+    if (packet.get_field("ecat_mailbox.coe.dsoldata") != nullptr) {
+      value = packet.get_field("ecat_mailbox.coe.dsoldata")->get_value<VariantValue>();
+    } else if (packet.get_field("ecat_mailbox.coe.sdodata") != nullptr) {
+      value = packet.get_field("ecat_mailbox.coe.sdodata")->get_value<VariantValue>();
+    }
+
+    if (packet.was_sent_from_master()) {
+      if (packet.is_sdo_type(coe::SdoType::SdoRequest)) {
+        if (packet.is_client_command_specifier(coe::SdoClientCommandSpecifier::InitiateDownload)) {
+          std::cout << "CoeDebugger::update_od TODO handle SDO Download\n";
+        } else if (packet.is_client_command_specifier(coe::SdoClientCommandSpecifier::InitiateUpload)) {
+          // nothing to do
+        } else {
+          throw std::runtime_error("Master SdoRequest ServerCommandSpecifier not implemented");
+        }
+      } else {
+        throw std::runtime_error("Master SdoType not implemented");
+      }
+    } else if (packet.was_sent_from_slave()) {
+      if (packet.is_sdo_type(coe::SdoType::SdoResponse)) {
+        if (packet.is_server_command_specifier(coe::SdoServerCommandSpecifier::InitiateUpload)) {
+          // TODO SDO "Access: complete" (see flag in ecat_mailbox.coe.sdoccsiu and sdoscsiu)
+          entry->set_value(value);
+        } else {
+          throw std::runtime_error("Slave SdoResponse SdoServerCommandSpecifier not implemented");
+        }
+      } else if (packet.is_sdo_type(coe::SdoType::SdoRequest)) {
+        if (packet.is_client_command_specifier(coe::SdoClientCommandSpecifier::InitiateUpload)) {
+          // nothing to do
+        } else {
+          throw std::runtime_error("Slave SdoRequest SdoClientCommandSpecifier not implemented");
+        }
+      } else {
+        throw std::runtime_error("Slave SdoType not implemented");
+      }
+    } else {
+      throw std::runtime_error("Packet from unknown sender");
+    }
+  } else if (packet.is_pdo()) {
+    // TODO honor 0x1C12 (SM2) and obj0x1C13 (SM3) for PDO Assignments
+    std::cout << "CoeDebugger::update_od TODO handle PDO\n";
+  }
 }
 
 }  // namespace coe

@@ -11,11 +11,6 @@
 namespace coe {
 
 class CoeDebugger {
- private:
-  std::vector<CoePacket> m_packets;
-  std::unique_ptr<EsiParser> m_esi_parser;
-  std::unique_ptr<OD> m_od;
-
  public:
   CoeDebugger();
   void add_packet(const CoePacket& packet);
@@ -24,7 +19,13 @@ class CoeDebugger {
   const std::vector<CoePacket>& get_packets() const;
   std::vector<const CoePacket*> get_packets_containing_field(const std::string& field_name) const;
   void read_esi(const std::string& esi_path);
-  const OD* get_od() const;
+  OD* get_od() const;
+  void update_od(const CoePacket& packet, bool missing_od_entries_are_errors = true);
+
+ private:
+  std::vector<CoePacket> m_packets;
+  std::unique_ptr<EsiParser> m_esi_parser;
+  std::unique_ptr<OD> m_od;
 };
 
 }  // namespace coe
