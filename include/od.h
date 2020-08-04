@@ -38,6 +38,7 @@ class OD {
   std::vector<OdObject*> get_objects_in_range(uint16_t start_index, uint16_t end_index);
   std::string pdo_mappings_to_string() const;
   std::string to_string() const;
+  std::string types_to_string() const;
   void set_value_change_callback(OdEntry::ValueChangeCallback value_change_callback);
 
  private:

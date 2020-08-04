@@ -46,6 +46,7 @@ class CoePacket {
   bool is_server_command_specifier(SdoServerCommandSpecifier sdo_scs) const;
   bool is_sdo() const;
   bool is_pdo() const;
+  bool is_complete_access() const;
 
  private:
   std::map<std::string, CoeField> m_fields;

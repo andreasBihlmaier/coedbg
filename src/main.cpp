@@ -17,7 +17,6 @@ std::string to_sdo_string(const coe::CoePacket& packet, coe::OD* od) {
   str += (boost::format(" slave=0x%04x") % packet.get_field("ecat.adp")->get_value<uint16_t>()).str();
   str += (boost::format(" wcnt=%03d") % packet.get_field("ecat.cnt")->get_value<uint16_t>()).str();
   str += " SDO";
-  // TODO SDO "Access: complete" (see flag in ecat_mailbox.coe.sdoccsiu and sdoscsiu)
   if (packet.is_sdo_type(coe::SdoType::SdoRequest)) {
     str += "  Request";
     if (packet.is_client_command_specifier(coe::SdoClientCommandSpecifier::InitiateDownload)) {
@@ -38,6 +37,9 @@ std::string to_sdo_string(const coe::CoePacket& packet, coe::OD* od) {
     }
   } else {
     str += "  UNKNOWN";
+  }
+  if (packet.is_complete_access()) {
+    str += " Complete-Access";
   }
   str += ":";
   uint16_t index = packet.get_field("ecat_mailbox.coe.sdoidx")->get_value<uint16_t>();
@@ -106,7 +108,8 @@ int main(int argc, char** argv) {
     debugger.read_esi(vm["esi-file"].as<std::string>());
     od = debugger.get_od();
     if (print_esi_od) {
-      std::cout << od->to_string() << '\n';
+      std::cout << "OD types:\n" << od->types_to_string() << '\n';
+      std::cout << "OD content:\n" << od->to_string() << '\n';
     }
     if (print_pdo_mappings) {
       std::cout << od->pdo_mappings_to_string() << '\n';
@@ -137,6 +140,7 @@ int main(int argc, char** argv) {
         // TODO update OD for each PDO
       }
       if (od != nullptr) {
+        // TODO filter packets: only process packets related to slave-address
         debugger.update_od(packet, false);
       }
     }

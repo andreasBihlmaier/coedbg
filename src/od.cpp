@@ -192,6 +192,14 @@ std::string OD::to_string() const {
   return str;
 }
 
+std::string OD::types_to_string() const {
+  std::string str;
+  for (const auto& datatype_kv : m_datatypes) {
+    str += datatype_kv.second.to_string();
+  }
+  return str;
+}
+
 void OD::set_value_change_callback(OdEntry::ValueChangeCallback value_change_callback) {
   for (auto& object_kv : m_od) {
     for (auto& entry_kv : object_kv.second) {

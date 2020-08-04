@@ -170,6 +170,15 @@ const VariantValue &CoeField::get_value<VariantValue>() const {
 }
 
 template <>
+const bool &CoeField::get_value<bool>() const {
+  if (m_type != FT_BOOLEAN) {
+    throw std::runtime_error("Field " + m_name + " value requested as bool (FT_BOOLEAN), but actual type is " +
+                             ftype_name(m_type));
+  }
+  return boost::get<bool>(m_value);
+}
+
+template <>
 const uint8_t &CoeField::get_value<uint8_t>() const {
   if (m_type != FT_UINT8) {
     throw std::runtime_error("Field " + m_name + " value requested as uint8_t (FT_UINT8), but actual type is " +

@@ -123,4 +123,11 @@ bool CoePacket::is_pdo() const {
               static_cast<std::underlying_type_t<EtherCatCommand>>(EtherCatCommand::LogicalReadWrite));
 }
 
+bool CoePacket::is_complete_access() const {
+  return ((contains_field("ecat_mailbox.coe.sdoscsiu_complete") &&
+           get_field("ecat_mailbox.coe.sdoscsiu_complete")->get_value<bool>()) ||
+          (contains_field("ecat_mailbox.coe.sdoccsid.complete") &&
+           get_field("ecat_mailbox.coe.sdoccsid.complete")->get_value<bool>()));
+}
+
 }  // namespace coe

@@ -29,6 +29,7 @@ class OdObject {
   const std::map<uint8_t, OdEntry>::const_iterator end() const {
     return m_entries.end();
   }
+  void set_complete_value(const VariantValue& new_complete_value);
 
  private:
   std::map<uint8_t, OdEntry> m_entries;

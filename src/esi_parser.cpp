@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
@@ -44,6 +45,11 @@ void EsiParser::read_file(const std::string& esi_path) {
     auto tree_base_type = tree_datatype.get_optional<std::string>("BaseType");
     if (tree_base_type) {
       datatype.base_type = od_base_type_from_string(*tree_base_type);
+    }
+    auto tree_array_info = tree_datatype.get_child_optional("ArrayInfo");
+    if (tree_array_info) {
+      datatype.array_lbound = tree_array_info->get<uint8_t>("LBound");
+      datatype.array_elements = tree_array_info->get<uint8_t>("Elements");
     }
     uint last_subindex = 0;
     for (auto& sub_kv : tree_datatype.get_child("")) {
@@ -99,10 +105,18 @@ void EsiParser::read_file(const std::string& esi_path) {
         subentry.name = entry.name + "/" + subentry_name;
         OdDataType subentry_datatype = m_od->get_type(entry.type_name, subentry_name);
         subentry.type = subentry_datatype.base_type;
-        subentry.bit_size = subentry_datatype.bit_size;
         if (subentry_datatype.name == "Elements") {
+          OdDataType elements_subentry_datatype = m_od->get_type(subentry_datatype.abstract_type);
+          if (elements_subentry_datatype.array_elements == 0) {
+            throw std::runtime_error(
+                (boost::format("Elements DataType for (0x%04x, %d) is missing ArrayInfo (array_elements=0)") %
+                 entry.index % (unsigned int)subindex)
+                    .str());
+          }
+          subentry.bit_size = elements_subentry_datatype.bit_size / elements_subentry_datatype.array_elements;
           subentry.subindex = subindex;
         } else {
+          subentry.bit_size = subentry_datatype.bit_size;
           subentry.subindex = subentry_datatype.subindex;
         }
         auto tree_default_data = get_default_data(tree_subobject);

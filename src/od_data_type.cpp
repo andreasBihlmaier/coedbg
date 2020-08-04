@@ -21,6 +21,9 @@ std::string OdDataType::to_string(bool print_subindex) const {
     }
     str += ")";
   }
+  if (array_lbound != 0 || array_elements != 0) {
+    str += " array_lbound=" + std::to_string(array_lbound) + " array_elements=" + std::to_string(array_elements);
+  }
   str += ")";
 
   return str;

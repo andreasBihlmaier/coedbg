@@ -82,6 +82,7 @@ void CoeDebugger::update_od(const CoePacket &packet, bool missing_od_entries_are
   if (packet.is_sdo()) {
     uint16_t index = packet.get_field("ecat_mailbox.coe.sdoidx")->get_value<uint16_t>();
     uint8_t subindex = packet.get_field("ecat_mailbox.coe.sdosub")->get_value<uint8_t>();
+    OdObject *object = m_od->get_object(index);
     OdEntry *entry = m_od->get_entry(index, subindex);
     if (entry == nullptr) {
       std::string msg =
@@ -115,8 +116,11 @@ void CoeDebugger::update_od(const CoePacket &packet, bool missing_od_entries_are
     } else if (packet.was_sent_from_slave()) {
       if (packet.is_sdo_type(coe::SdoType::SdoResponse)) {
         if (packet.is_server_command_specifier(coe::SdoServerCommandSpecifier::InitiateUpload)) {
-          // TODO SDO "Access: complete" (see flag in ecat_mailbox.coe.sdoccsiu and sdoscsiu)
-          entry->set_value(value);
+          if (packet.is_complete_access()) {
+            object->set_complete_value(value);
+          } else {
+            entry->set_value(value);
+          }
         } else {
           throw std::runtime_error("Slave SdoResponse SdoServerCommandSpecifier not implemented");
         }

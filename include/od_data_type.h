@@ -17,8 +17,11 @@ class OdDataType {
   uint32_t bit_offset;
   OdBaseType base_type;
   std::map<uint8_t, OdDataType> subindex_types;
+  uint8_t array_lbound;
+  uint8_t array_elements;
 
-  OdDataType() : subindex(0), bit_size(0), bit_offset(0), base_type(OdBaseType::Invalid) {
+  OdDataType()
+      : subindex(0), bit_size(0), bit_offset(0), base_type(OdBaseType::Invalid), array_lbound(0), array_elements(0) {
   }
   std::string to_string(bool print_subindex = false) const;
   void add_subtype(const OdDataType& subtype);
