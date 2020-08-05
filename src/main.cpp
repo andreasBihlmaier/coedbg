@@ -102,6 +102,7 @@ int main(int argc, char** argv) {
        "Print every value change in OD (only shows writes that actually change a value)")  //
       ("plugin-dir", po::value<std::string>(), "Wireshark plugin directory")               //
       ("from-pcap", po::value<std::string>(), "PCAP file to read")                         //
+      ("slaves-count", po::value<uint16_t>(), "Number of slaves")                          //
       ("slave-address", po::value<uint16_t>(), "Slave ID")                                 //
       ("esi-file", po::value<std::string>(), "ESI XML file");
   po::variables_map vm;
@@ -152,7 +153,7 @@ int main(int argc, char** argv) {
         // TODO update OD for each PDO
       }
       if (od != nullptr) {
-        // TODO filter packets: only process packets related to slave-address
+        // TODO filter packets: only process packets related to slave-address AND pass on slaves-count
         debugger.update_od(packet, false);
       }
     }

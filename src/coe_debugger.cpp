@@ -144,17 +144,19 @@ void CoeDebugger::update_od(const CoePacket &packet, bool missing_od_entries_are
   } else if (packet.is_pdo()) {
     // TODO honor 0x1C12 (SM2) and obj0x1C13 (SM3) for PDO Assignments
 
+    const uint16_t NUMBER_OF_SLAVES = 6;      // XXX value 6 is a hack!
+    const uint16_t SLAVE_POSITION = 5;        // XXX value 5 is a hack!
+
     std::vector<uint8_t> data = packet.get_field("ecat.data")->get_value<std::vector<uint8_t>>();
     if (packet.was_sent_from_master()) {  // process RxPDO (master->slave)
-      // TODO initial offset due to number of slaves and address of current one
       auto &rxpdo_mapping = m_od->get_rxpdo_mapping();
+      // TODO the following must be offset by the position of this slave
+      uint16_t rxpdo_size = m_od->get_rxpdo_byte_size();
       for (const auto &byte_offset_entry_kv : rxpdo_mapping) {
         OdEntry *entry = byte_offset_entry_kv.second;
-        entry->set_value(extract_entry_data(data, byte_offset_entry_kv.first, entry->bit_size / 8));
+        entry->set_value(extract_entry_data(data, rxpdo_size * SLAVE_POSITION + byte_offset_entry_kv.first, entry->bit_size / 8));
       }
     } else if (packet.was_sent_from_slave()) {  // process TxPDO (slave->master)
-      const uint16_t NUMBER_OF_SLAVES = 6;      // XXX value 6 is a hack!
-      const uint16_t SLAVE_POSITION = 5;        // XXX value 5 is a hack!
       // TODO the following must be multiplied by number of slaves
       uint16_t txpdo_start_byte_offset = m_od->get_rxpdo_byte_size() * NUMBER_OF_SLAVES;
       auto &txpdo_mapping = m_od->get_txpdo_mapping();
