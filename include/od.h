@@ -24,6 +24,7 @@ class OD {
  public:
   static PdoMappingDecoding decode_pdo_mapping(const OdEntry& entry);
   static std::string pdo_mapping_to_string(const PdoMapping& mapping);
+  static uint16_t get_pdo_byte_size(const PdoMapping& mapping);
 
   void add_entry(const OdEntry& entry);
   void add_datatype(const OdDataType& datatype);

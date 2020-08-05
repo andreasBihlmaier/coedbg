@@ -39,6 +39,11 @@ std::string OD::pdo_mapping_to_string(const PdoMapping& mapping) {
   return str;
 }
 
+uint16_t OD::get_pdo_byte_size(const PdoMapping& mapping) {
+  auto last_entry = mapping.rbegin();
+  return last_entry->first + (last_entry->second->bit_size / 8);
+}
+
 PdoMappingDecoding OD::decode_pdo_mapping(const OdEntry& entry) {
   if (entry.type != OdBaseType::Uint32) {
     throw std::runtime_error("OdEntry " + entry.to_string() + " has wrong type for a PDO mapping");
@@ -213,8 +218,7 @@ const PdoMapping& OD::get_rxpdo_mapping() const {
 }
 
 uint16_t OD::get_rxpdo_byte_size() const {
-  auto last_entry = m_rxpdo_mapping.rbegin();
-  return last_entry->first + (last_entry->second->bit_size / 8);
+  return get_pdo_byte_size(m_rxpdo_mapping);
 }
 
 const PdoMapping& OD::get_txpdo_mapping() const {
@@ -222,8 +226,7 @@ const PdoMapping& OD::get_txpdo_mapping() const {
 }
 
 uint16_t OD::get_txpdo_byte_size() const {
-  auto last_entry = m_txpdo_mapping.rbegin();
-  return last_entry->first + (last_entry->second->bit_size / 8);
+  return get_pdo_byte_size(m_txpdo_mapping);
 }
 
 }  // namespace coe

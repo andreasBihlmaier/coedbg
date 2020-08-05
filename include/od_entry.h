@@ -14,8 +14,6 @@ class OdEntry {
  public:
   using ValueChangeCallback = std::function<void(const OdEntry& entry, const VariantValue& new_value)>;
 
-  static std::string value_to_string(const VariantValue& value);
-
   uint16_t index;
   uint8_t subindex;
   std::string name;
@@ -33,6 +31,7 @@ class OdEntry {
   void set_value_from_default_data();
   void set_value(const std::vector<uint8_t>& data);
   void set_value(const VariantValue& new_value);
+  VariantValue decode_data(const std::vector<uint8_t>& data) const;
 };
 
 }  // namespace coe

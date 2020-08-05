@@ -23,70 +23,8 @@ void CoeField::set_type(enum ftenum type) {
   m_type = type;
 }
 
-class ValueToStringVisitor : public boost::static_visitor<> {
- private:
-  std::string &m_str;
-
- public:
-  ValueToStringVisitor(std::string &str) : m_str(str) {
-  }
-  // template <typename T>
-  // void operator()(T &operand) const {
-  //  m_str = std::to_string(operand);
-  //}
-  void operator()(const bool &operand) const {
-    m_str = (boost::format("%s=%d") % (operand == true ? "true" : "false") % operand).str();
-  }
-  void operator()(const uint8_t &operand) const {
-    m_str = (boost::format("0x%02x=%u") % (unsigned int)operand % (unsigned int)operand).str();
-  }
-  void operator()(const uint16_t &operand) const {
-    m_str = (boost::format("0x%04x=%u") % operand % operand).str();
-  }
-  void operator()(const uint32_t &operand) const {
-    m_str = (boost::format("0x%08x=%u") % operand % operand).str();
-  }
-  void operator()(const uint64_t &operand) const {
-    m_str = (boost::format("0x%16x=%llu") % operand % operand).str();
-  }
-  void operator()(const int8_t &operand) const {
-    m_str = (boost::format("0x%02x=%d") % operand % operand).str();
-  }
-  void operator()(const int16_t &operand) const {
-    m_str = (boost::format("0x%04x=%d") % operand % operand).str();
-  }
-  void operator()(const int32_t &operand) const {
-    m_str = (boost::format("0x%08x=%d") % operand % operand).str();
-  }
-  void operator()(const int64_t &operand) const {
-    m_str = (boost::format("0x%16x=%lld") % operand % operand).str();
-  }
-  void operator()(const float &operand) const {
-    m_str = (boost::format("%f") % operand).str();
-  }
-  void operator()(const double &operand) const {
-    m_str = (boost::format("%lf") % operand).str();
-  }
-  void operator()(const std::string &operand) const {
-    m_str = operand;
-  }
-  void operator()(const std::vector<uint8_t> &operand) const {
-    m_str = "(len=" + std::to_string(operand.size());
-    m_str += " data=0x";
-    for (auto byte : operand) {
-      m_str += (boost::format("%02x") % (unsigned int)byte).str();
-    }
-    m_str += ")";
-  }
-  void operator()(const NsTime &operand) const {
-    m_str = (boost::format("%d.%09d") % operand.secs % operand.nsecs).str();
-  }
-};
-
 std::string CoeField::value_to_string() const {
-  std::string str;
-  boost::apply_visitor(ValueToStringVisitor(str), m_value);
-  return str;
+  return variant_value_to_string(m_value);
 }
 
 std::string CoeField::to_string() const {

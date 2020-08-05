@@ -10,7 +10,8 @@
 
 namespace coe {
 
-static std::vector<uint8_t> extract_entry_data(const std::vector<uint8_t> &data, uint16_t start, uint16_t length) {
+std::vector<uint8_t> CoeDebugger::extract_entry_data(const std::vector<uint8_t> &data, uint16_t start,
+                                                     uint16_t length) {
   // TODO do this more efficiently, e.g. by implementing a set_value that takes (reverse) iterators
   return std::vector<uint8_t>{&data[start], &data[start + length]};
 }
@@ -83,7 +84,8 @@ OD *CoeDebugger::get_od() const {
   return m_od.get();
 }
 
-void CoeDebugger::update_od(const CoePacket &packet, bool missing_od_entries_are_errors) {
+void CoeDebugger::update_od(const CoePacket &packet, uint16_t number_of_slaves, uint16_t slave_position,
+                            bool missing_od_entries_are_errors) {
   if (packet.is_sdo() && packet.sdo_status_ok()) {
     uint16_t index = packet.get_field("ecat_mailbox.coe.sdoidx")->get_value<uint16_t>();
     uint8_t subindex = packet.get_field("ecat_mailbox.coe.sdosub")->get_value<uint8_t>();
@@ -144,28 +146,23 @@ void CoeDebugger::update_od(const CoePacket &packet, bool missing_od_entries_are
   } else if (packet.is_pdo()) {
     // TODO honor 0x1C12 (SM2) and obj0x1C13 (SM3) for PDO Assignments
 
-    const uint16_t NUMBER_OF_SLAVES = 6;      // XXX value 6 is a hack!
-    const uint16_t SLAVE_POSITION = 5;        // XXX value 5 is a hack!
-
     std::vector<uint8_t> data = packet.get_field("ecat.data")->get_value<std::vector<uint8_t>>();
     if (packet.was_sent_from_master()) {  // process RxPDO (master->slave)
       auto &rxpdo_mapping = m_od->get_rxpdo_mapping();
-      // TODO the following must be offset by the position of this slave
       uint16_t rxpdo_size = m_od->get_rxpdo_byte_size();
       for (const auto &byte_offset_entry_kv : rxpdo_mapping) {
         OdEntry *entry = byte_offset_entry_kv.second;
-        entry->set_value(extract_entry_data(data, rxpdo_size * SLAVE_POSITION + byte_offset_entry_kv.first, entry->bit_size / 8));
+        entry->set_value(
+            extract_entry_data(data, rxpdo_size * slave_position + byte_offset_entry_kv.first, entry->bit_size / 8));
       }
     } else if (packet.was_sent_from_slave()) {  // process TxPDO (slave->master)
-      // TODO the following must be multiplied by number of slaves
-      uint16_t txpdo_start_byte_offset = m_od->get_rxpdo_byte_size() * NUMBER_OF_SLAVES;
+      uint16_t txpdo_start_byte_offset = m_od->get_rxpdo_byte_size() * number_of_slaves;
       auto &txpdo_mapping = m_od->get_txpdo_mapping();
-      // TODO the following must be offset by the position of this slave
       uint16_t txpdo_size = m_od->get_txpdo_byte_size();
       for (const auto &byte_offset_entry_kv : txpdo_mapping) {
         OdEntry *entry = byte_offset_entry_kv.second;
         entry->set_value(
-            extract_entry_data(data, txpdo_start_byte_offset + txpdo_size * SLAVE_POSITION + byte_offset_entry_kv.first,
+            extract_entry_data(data, txpdo_start_byte_offset + txpdo_size * slave_position + byte_offset_entry_kv.first,
                                entry->bit_size / 8));
       }
     } else {

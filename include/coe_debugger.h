@@ -12,6 +12,8 @@ namespace coe {
 
 class CoeDebugger {
  public:
+  static std::vector<uint8_t> extract_entry_data(const std::vector<uint8_t>& data, uint16_t start, uint16_t length);
+
   CoeDebugger();
   void add_packet(const CoePacket& packet);
   void read_pcap(const std::string& pcap_path);
@@ -20,7 +22,8 @@ class CoeDebugger {
   std::vector<const CoePacket*> get_packets_containing_field(const std::string& field_name) const;
   void read_esi(const std::string& esi_path);
   OD* get_od() const;
-  void update_od(const CoePacket& packet, bool missing_od_entries_are_errors = true);
+  void update_od(const CoePacket& packet, uint16_t number_of_slaves, uint16_t slave_position,
+                 bool missing_od_entries_are_errors = true);
 
  private:
   std::vector<CoePacket> m_packets;
