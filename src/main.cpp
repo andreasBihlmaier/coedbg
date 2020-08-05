@@ -7,6 +7,7 @@
 
 std::string to_sdo_string(const coe::CoePacket& packet, coe::OD* od) {
   std::string str;
+  bool sdo_failed = false;
   if (packet.was_sent_from_master()) {
     str += "M->S";
   } else if (packet.was_sent_from_slave()) {
@@ -23,6 +24,9 @@ std::string to_sdo_string(const coe::CoePacket& packet, coe::OD* od) {
       str += " Download";
     } else if (packet.is_client_command_specifier(coe::SdoClientCommandSpecifier::InitiateUpload)) {
       str += "   Upload";
+    } else if (packet.is_client_command_specifier(coe::SdoClientCommandSpecifier::AbortTransfer)) {
+      str += "    Abort";
+      sdo_failed = true;
     } else {
       str += "  UNKNOWN";
     }
@@ -42,17 +46,25 @@ std::string to_sdo_string(const coe::CoePacket& packet, coe::OD* od) {
     str += " Complete-Access";
   }
   str += ":";
-  uint16_t index = packet.get_field("ecat_mailbox.coe.sdoidx")->get_value<uint16_t>();
-  str += (boost::format(" index=0x%04x") % index).str();
-  uint8_t subindex = packet.get_field("ecat_mailbox.coe.sdosub")->get_value<uint8_t>();
-  str += (boost::format(" subindex=%03d") % (unsigned int)subindex).str();
-  if (od != nullptr) {
-    str += " fieldname=";
-    auto od_entry = od->get_entry(index, subindex);
-    if (od_entry != nullptr) {
-      str += "\"" + od_entry->name + "\"";
+  if (sdo_failed) {
+    str += " SDO FAILED";
+  } else {
+    if (packet.contains_field("ecat_mailbox.coe.sdoidx") && packet.get_field("ecat_mailbox.coe.sdosub")) {
+      uint16_t index = packet.get_field("ecat_mailbox.coe.sdoidx")->get_value<uint16_t>();
+      str += (boost::format(" index=0x%04x") % index).str();
+      uint8_t subindex = packet.get_field("ecat_mailbox.coe.sdosub")->get_value<uint8_t>();
+      str += (boost::format(" subindex=%03d") % (unsigned int)subindex).str();
+      if (od != nullptr) {
+        str += " fieldname=";
+        auto od_entry = od->get_entry(index, subindex);
+        if (od_entry != nullptr) {
+          str += "\"" + od_entry->name + "\"";
+        } else {
+          str += "UNKNOWN";
+        }
+      }
     } else {
-      str += "UNKNOWN";
+      str += " (index, subindex) MISSING";
     }
   }
   if (packet.is_sdo_type(coe::SdoType::SdoResponse)) {
@@ -135,7 +147,7 @@ int main(int argc, char** argv) {
       } else if (packet.is_pdo()) {
         // std::cout << "PDO: " << packet.to_string() << "\n";
         auto& pdo_data = packet.get_field("ecat.data")->get_value<std::vector<uint8_t>>();
-        std::cout << "pdo_data.size()=" << pdo_data.size() << "\n";
+        std::cout << "pdo_data.size()=" << pdo_data.size() << "\n";  // TODO to_pdo_string(packet, od)
         // TODO decode and print each PDO packet
         // TODO update OD for each PDO
       }

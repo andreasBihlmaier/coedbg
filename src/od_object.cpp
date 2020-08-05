@@ -20,7 +20,7 @@ void OdObject::set_complete_value(const VariantValue& new_complete_value) {
   uint16_t byte_offset = 0;
   for (auto& entry_kv : m_entries) {
     uint16_t entry_byte_length = entry_kv.second.bit_size / 8;
-    std::vector<uint8_t> entry_data(&data[byte_offset], &data[byte_offset + entry_byte_length]);
+    std::vector<uint8_t> entry_data{&data[byte_offset], &data[byte_offset + entry_byte_length]};
     entry_kv.second.set_value(entry_data);
     if (entry_kv.second.subindex == 0) {  // special case: subindex 0 has size of 1 byte, but 16 bit offset
       byte_offset += 2;

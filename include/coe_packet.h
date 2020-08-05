@@ -17,6 +17,7 @@ enum class SdoType : uint16_t {
 enum class SdoClientCommandSpecifier : uint8_t {
   InitiateDownload = 1,
   InitiateUpload = 2,
+  AbortTransfer = 4,
 };
 enum class SdoServerCommandSpecifier : uint8_t {
   UploadSegment = 0,
@@ -47,6 +48,7 @@ class CoePacket {
   bool is_sdo() const;
   bool is_pdo() const;
   bool is_complete_access() const;
+  bool sdo_status_ok() const;
 
  private:
   std::map<std::string, CoeField> m_fields;

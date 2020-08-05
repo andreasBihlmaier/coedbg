@@ -31,7 +31,7 @@ PdoMapping OD::pdo_mappings(uint16_t start_index, uint16_t end_index) {
 std::string OD::pdo_mapping_to_string(const PdoMapping& mapping) {
   std::string str;
   str += "(";
-  for (auto byte_offset_entry_kv : mapping) {
+  for (const auto& byte_offset_entry_kv : mapping) {
     str += "(offset=" + std::to_string(byte_offset_entry_kv.first) +
            " entry=" + byte_offset_entry_kv.second->to_string() + ")";
   }
@@ -46,7 +46,7 @@ PdoMappingDecoding OD::decode_pdo_mapping(const OdEntry& entry) {
   uint32_t mapping_value = boost::get<uint32_t>(entry.value);
   return PdoMappingDecoding{static_cast<uint16_t>((mapping_value & (0xFFFF << 16)) >> 16),
                             static_cast<uint8_t>((mapping_value & (0xFF << 8)) >> 8),
-                            static_cast<uint8_t>(mapping_value & 0xFF)};
+                            static_cast<uint8_t>((mapping_value & 0xFF) / 8)};
 }
 
 void OD::add_entry(const OdEntry& entry) {
@@ -206,6 +206,24 @@ void OD::set_value_change_callback(OdEntry::ValueChangeCallback value_change_cal
       entry_kv.second.value_change_callback = value_change_callback;
     }
   }
+}
+
+const PdoMapping& OD::get_rxpdo_mapping() const {
+  return m_rxpdo_mapping;
+}
+
+uint16_t OD::get_rxpdo_byte_size() const {
+  auto last_entry = m_rxpdo_mapping.rbegin();
+  return last_entry->first + (last_entry->second->bit_size / 8);
+}
+
+const PdoMapping& OD::get_txpdo_mapping() const {
+  return m_txpdo_mapping;
+}
+
+uint16_t OD::get_txpdo_byte_size() const {
+  auto last_entry = m_txpdo_mapping.rbegin();
+  return last_entry->first + (last_entry->second->bit_size / 8);
 }
 
 }  // namespace coe

@@ -40,6 +40,10 @@ class OD {
   std::string to_string() const;
   std::string types_to_string() const;
   void set_value_change_callback(OdEntry::ValueChangeCallback value_change_callback);
+  const PdoMapping& get_rxpdo_mapping() const;
+  uint16_t get_rxpdo_byte_size() const;
+  const PdoMapping& get_txpdo_mapping() const;
+  uint16_t get_txpdo_byte_size() const;
 
  private:
   std::map<uint16_t, OdObject> m_od;

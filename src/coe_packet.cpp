@@ -100,17 +100,23 @@ bool CoePacket::was_sent_from_slave() const {
 }
 
 bool CoePacket::is_sdo_type(SdoType sdo_type) const {
-  return static_cast<SdoType>(get_field("ecat_mailbox.coe.type")->get_value<uint16_t>()) == sdo_type;
+  return contains_field("ecat_mailbox.coe.type") &&
+         static_cast<SdoType>(get_field("ecat_mailbox.coe.type")->get_value<uint16_t>()) == sdo_type;
 }
 
 bool CoePacket::is_client_command_specifier(SdoClientCommandSpecifier sdo_ccs) const {
-  return static_cast<SdoClientCommandSpecifier>(get_field("ecat_mailbox.coe.sdoccsiu")->get_value<uint8_t>() >> 5) ==
-         sdo_ccs;
+  return (contains_field("ecat_mailbox.coe.sdoccsiu") &&
+          static_cast<SdoClientCommandSpecifier>(get_field("ecat_mailbox.coe.sdoccsiu")->get_value<uint8_t>() >> 5) ==
+              sdo_ccs) ||
+         (contains_field("ecat_mailbox.coe.sdoreq") &&
+          static_cast<SdoClientCommandSpecifier>(get_field("ecat_mailbox.coe.sdoreq")->get_value<uint8_t>()) ==
+              sdo_ccs);
 }
 
 bool CoePacket::is_server_command_specifier(SdoServerCommandSpecifier sdo_scs) const {
-  return static_cast<SdoServerCommandSpecifier>(get_field("ecat_mailbox.coe.sdoscsiu")->get_value<uint8_t>() >> 5) ==
-         sdo_scs;
+  return contains_field("ecat_mailbox.coe.sdoscsiu") &&
+         static_cast<SdoServerCommandSpecifier>(get_field("ecat_mailbox.coe.sdoscsiu")->get_value<uint8_t>() >> 5) ==
+             sdo_scs;
 }
 
 bool CoePacket::is_sdo() const {
@@ -128,6 +134,11 @@ bool CoePacket::is_complete_access() const {
            get_field("ecat_mailbox.coe.sdoscsiu_complete")->get_value<bool>()) ||
           (contains_field("ecat_mailbox.coe.sdoccsid.complete") &&
            get_field("ecat_mailbox.coe.sdoccsid.complete")->get_value<bool>()));
+}
+
+bool CoePacket::sdo_status_ok() const {
+  return is_sdo() && !(is_sdo_type(coe::SdoType::SdoRequest) &&
+                       is_client_command_specifier(coe::SdoClientCommandSpecifier::AbortTransfer));
 }
 
 }  // namespace coe
