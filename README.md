@@ -1,7 +1,7 @@
 # CAN application protocol (CANopen) over EtherCAT (CoE) debugger
 
 ## Build
-Dependencies (Ubuntu 18.04): `TODO`
+Dependencies (Ubuntu 18.04): `libcap-dev libc-ares-dev libgcrypt20-dev libkrb5-dev flex bison qtbase5-dev qtmultimedia5-dev libqt5svg5-dev TODO`
 
 ```
 mkdir ${HOME}/coe_debugging
@@ -20,7 +20,7 @@ find . -name "*.h" ! -path "*build*" ! -path "*install/include*" -exec cp --pare
 cp build/config.h install/include/wireshark
 
 cd ${HOME}/coe_debugging
-git clone git@github.com:epl-viz/liblibwireshark.git
+git clone git@github.com:epl-viz/liblibwireshark.git  # TODO fork?
 cd liblibwireshark
 mkdir build
 cd build
